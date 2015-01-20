@@ -35,18 +35,28 @@ namespace CodeCracker.Style
 
         private static void AnalyzeMethod(SyntaxNodeAnalysisContext context)
         {
-            var invocationExpression = (MethodDeclarationSyntax)context.Node;
-            if (invocationExpression.Identifier.ToString().EndsWith("Async")) return;
-            
-            var returnType = context.SemanticModel.GetSymbolInfo(invocationExpression.ReturnType).Symbol?.ToString();
-            if (returnType == null) return;
+            var method = (MethodDeclarationSyntax)context.Node;
+            if (method.Identifier.ToString().EndsWith("Async")) return;
 
-            if (invocationExpression.Modifiers.Any(SyntaxKind.AsyncKeyword) || returnType.StartsWith("System.Threading.Tasks.Task"))
+            var returnType = context.SemanticModel.GetSymbolInfo(method.ReturnType).Symbol as INamedTypeSymbol;
+            if (returnType == null) return;
+            returnType.ToString().StartsWith("System.Threading.Tasks.Task");
+
+            if (method.Modifiers.Any(SyntaxKind.AsyncKeyword))
             {
-                var errorMessage = invocationExpression.Identifier.ToString() + "Async";
-                var diag = Diagnostic.Create(Rule, invocationExpression.GetLocation(), errorMessage);
-                context.ReportDiagnostic(diag);
+                ReportDiagnostic(context, method);
+                return;
             }
+            if (method.Modifiers.Any(SyntaxKind.AsyncKeyword) || returnType.ToString().StartsWith("System.Threading.Tasks.Task")
+            || (returnType.IsGenericType && returnType.ConstructedFrom.ToString() == "System.Threading.Tasks.Task<TResult>"))
+                ReportDiagnostic(context, method);
+        }
+
+        private static void ReportDiagnostic(SyntaxNodeAnalysisContext context, MethodDeclarationSyntax method)
+        {
+            var errorMessage = method.Identifier.ToString() + "Async";
+            var diag = Diagnostic.Create(Rule, method.GetLocation(), errorMessage);
+            context.ReportDiagnostic(diag);
         }
     }
 }

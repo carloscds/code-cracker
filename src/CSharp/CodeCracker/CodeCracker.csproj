@@ -69,12 +69,13 @@
     <Compile Include="Refactoring\ChangeAnyToAllCodeFixProvider.cs" />
     <Compile Include="Refactoring\ReplaceWithGetterOnlyAutoPropertyAnalyzer.cs" />
     <Compile Include="Refactoring\ReplaceWithGetterOnlyAutoPropertyCodeFixProvider.cs" />
+    <Compile Include="Refactoring\PropertyChangedEventArgsUnnecessaryAllocationAnalyzer.cs" />
+    <Compile Include="Refactoring\PropertyChangedEventArgsUnnecessaryAllocationCodeFixProvider.cs" />
     <Compile Include="Refactoring\SplitIntoNestedIfFixAllProvider.cs" />
     <Compile Include="Refactoring\SplitIntoNestedIfCodeFixProvider.cs" />
     <Compile Include="Refactoring\SplitIntoNestedIfAnalyzer.cs" />
     <Compile Include="Refactoring\NumericLiteralCodeFixProvider.cs" />
     <Compile Include="Refactoring\IntroduceFieldFromConstructorAnalyzer.cs" />
-    <Compile Include="Refactoring\IntroduceFieldFromConstructorCodeFixProviderAll.cs" />
     <Compile Include="Refactoring\IntroduceFieldFromConstructorCodeFixProvider.cs" />
     <Compile Include="Refactoring\ParameterRefactoryAnalyzer.cs" />
     <Compile Include="Refactoring\ParameterRefactoryCodeFixProvider.cs" />

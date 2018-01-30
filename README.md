@@ -59,9 +59,12 @@ msbuild
 
 Then add a reference to CodeCracker.dll from within the Analyzers node inside References, in Visual Studio.
 
+TL;DR:
+If you want to use CodeCracker in all your projects, install the Visual Studio extension ([C#](https://visualstudiogallery.msdn.microsoft.com/ab588981-91a5-478c-8e65-74d0ff450862), [VB](https://visualstudiogallery.msdn.microsoft.com/1a5f9551-e831-4812-abd0-ac48603fc2c1)). If you want to use CodeCracker for just one project, install the Nuget package as described above.
+
 ## SonarQube Plugin
 
-CodeCracker has a SonarQube Plugin that can downloaded at [Plugins HomePage](http://docs.sonarqube.org/display/PLUG/Other+Plugins). 
+CodeCracker has a SonarQube Plugin that can be downloaded at [Plugins HomePage](http://docs.sonarqube.org/display/PLUG/Other+Plugins). 
 
 ## Contributing
 
@@ -272,7 +275,7 @@ The maintainers have to:
 
 To become part of the core team one has to be invited. Invitations happen only if all the core team agrees.
 
-If a member of the core team is not active for at least to months, they will probably be removed from the core team.
+If a member of the core team is not active for at least two months, they will probably be removed from the core team.
 
 ## Contact
 

@@ -5,16 +5,16 @@ Properties {
     $srcDir = "$rootDir\src"
     $testDir = "$rootDir\test"
     $isAppVeyor = $env:APPVEYOR -eq $true
-    $slns = ls "$rootDir\*.sln" | ? { ! $_.Name.Contains('.2015.') }
+    $slns = ls "$rootDir\*.sln"
     $packagesDir = "$rootDir\packages"
     $buildNumber = [Convert]::ToInt32($env:APPVEYOR_BUILD_NUMBER).ToString("0000")
     $nuspecPathCS = "$rootDir\src\CSharp\CodeCracker\CodeCracker.nuspec"
     $nuspecPathVB = "$rootDir\src\VisualBasic\CodeCracker\CodeCracker.nuspec"
-    $nugetPackagesExe = "$packagesDir\NuGet.CommandLine.4.1.0\tools\NuGet.exe"
+    $nugetPackagesExe = "$packagesDir\NuGet.CommandLine.4.6.2\tools\NuGet.exe"
     $nugetExe = if (Test-Path $nugetPackagesExe) { $nugetPackagesExe } else { 'nuget' }
     $nupkgPathCS = "$rootDir\src\CSharp\CodeCracker.CSharp.{0}.nupkg"
     $nupkgPathVB = "$rootDir\src\VisualBasic\CodeCracker.VisualBasic.{0}.nupkg"
-    $xunitConsoleExe = "$packagesDir\xunit.runner.console.2.2.0\tools\xunit.console.x86.exe"
+    $xunitConsoleExe = "$packagesDir\xunit.runner.console.2.3.1\tools\net452\xunit.console.x86.exe"
     $openCoverExe = "$packagesDir\OpenCover.4.6.519\tools\OpenCover.Console.exe"
     $dllCS = "CodeCracker.CSharp.dll"
     $dllVB = "CodeCracker.VisualBasic.dll"
@@ -31,13 +31,17 @@ Properties {
     $releaseDirCS = "$projectDirCS\bin\Release"
     $logDir = "$rootDir\log"
     $outputXml = "$logDir\CodeCoverageResults.xml"
-    $reportGeneratorExe = "$packagesDir\ReportGenerator.2.5.6\tools\ReportGenerator.exe"
+    $reportGeneratorExe = "$packagesDir\ReportGenerator.3.1.2\tools\ReportGenerator.exe"
     $coverageReportDir = "$logDir\codecoverage\"
-    $coverallsNetExe = "$packagesDir\coveralls.io.1.3.4\tools\coveralls.net.exe"
+    $coverallsNetExe = "$packagesDir\coveralls.io.1.4.2\tools\coveralls.net.exe"
     $ilmergeExe = "$packagesDir\ilmerge.2.14.1208\tools\ILMerge.exe"
     $isRelease = $isAppVeyor -and (($env:APPVEYOR_REPO_BRANCH -eq "release") -or ($env:APPVEYOR_REPO_TAG -eq "true"))
     $isPullRequest = $env:APPVEYOR_PULL_REQUEST_NUMBER -ne $null
     $tempDir = Join-Path "$([System.IO.Path]::GetTempPath())" "CodeCracker"
+    # msbuild hack necessary until https://github.com/psake/psake/issues/201 is fixed:
+    $msbuild64 = Resolve-Path "$(if (${env:ProgramFiles(x86)}) { ${env:ProgramFiles(x86)} } else { $env:ProgramFiles } )\Microsoft Visual Studio\2017\*\MSBuild\15.0\Bin\msbuild.exe"
+    $msbuild32 = Resolve-Path "$(if (${env:ProgramFiles(x86)}) { ${env:ProgramFiles(x86)} } else { $env:ProgramFiles } )\Microsoft Visual Studio\2017\*\MSBuild\15.0\Bin\msbuild.exe"
+    $msbuild = if ($msbuild64) { $msbuild64 } else { $msbuild32 }
 }
 
 FormatTaskName (("-"*25) + "[{0}]" + ("-"*25))
@@ -62,17 +66,17 @@ Task Build-Only -depends Build-Only-CS, Build-Only-VB
 Task Build-Only-CS -depends Build-MSBuild-CS, ILMerge-CS
 Task Build-MSBuild-CS {
     if ($isAppVeyor) {
-        Exec { msbuild $solutionFileCS /m /verbosity:minimal /p:Configuration=ReleaseNoVsix /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" }
+        Exec { . $msbuild $solutionFileCS /m /verbosity:minimal /p:Configuration=ReleaseNoVsix /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" }
     } else {
-        Exec { msbuild $solutionFileCS /m /verbosity:minimal /p:Configuration=ReleaseNoVsix }
+        Exec { . $msbuild $solutionFileCS /m /verbosity:minimal /p:Configuration=ReleaseNoVsix }
     }
 }
 Task Build-Only-VB -depends Build-MSBuild-VB, ILMerge-VB
 Task Build-MSBuild-VB {
     if ($isAppVeyor) {
-        Exec { msbuild $solutionFileVB /m /verbosity:minimal /p:Configuration=ReleaseNoVsix /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" }
+        Exec { . $msbuild $solutionFileVB /m /verbosity:minimal /p:Configuration=ReleaseNoVsix /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll" }
     } else {
-        Exec { msbuild $solutionFileVB /m /verbosity:minimal /p:Configuration=ReleaseNoVsix }
+        Exec { . $msbuild $solutionFileVB /m /verbosity:minimal /p:Configuration=ReleaseNoVsix }
     }
 }
 
@@ -80,7 +84,7 @@ Task ILMerge-VB { ILMerge $releaseDirVB $dllVB $projectFileVB $projectDirVB }
 Task ILMerge-CS { ILMerge $releaseDirCS $dllCS $projectFileCS $projectDirCS }
 
 function ILMerge($releaseDir, $dll, $projectFile, $projectDir) {
-	Write-Host "IL Merge:"
+    Write-Host "IL Merge:"
     $mergedDir = $tempDir
     if (!(Test-Path $mergedDir)) { mkdir "$mergedDir" }
     $inputDll = "$releaseDir\$dll"
@@ -108,11 +112,11 @@ function ILMerge($releaseDir, $dll, $projectFile, $projectDir) {
     $releaseMergedDir = "$releaseDir\merged"
     if (!(Test-Path $releaseMergedDir)) { mkdir $releaseMergedDir | Out-Null }
     cp $mergedDll "$releaseMergedDir\" -Force
-	Write-Host "  $dll -> $releaseMergedDir\$dll"
+    Write-Host "  $dll -> $releaseMergedDir\$dll"
     $mergedPdb = Change-Extension $mergedDll "pdb"
     cp $mergedPdb "$releaseMergedDir\" -Force
-	$pdb = (ls $mergedPdb).Name
-	Write-Host "  $pdb -> $releaseMergedDir\$pdb"
+    $pdb = (ls $mergedPdb).Name
+    Write-Host "  $pdb -> $releaseMergedDir\$pdb"
 }
 
 function Change-Extension ($filename, $extension) {
@@ -120,8 +124,8 @@ function Change-Extension ($filename, $extension) {
 }
 
 Task Clean {
-    Exec { msbuild $solutionFileCS /t:Clean /v:quiet }
-    Exec { msbuild $solutionFileVB /t:Clean /v:quiet }
+    Exec { . $msbuild $solutionFileCS /t:Clean /v:quiet }
+    Exec { . $msbuild $solutionFileVB /t:Clean /v:quiet }
 }
 
 Task Set-Log {
@@ -177,6 +181,30 @@ Task Pack-Nuget-VB-Force {
     PackNuget "VB" "$rootDir\src\VisualBasic" $nuspecPathVB $nupkgPathVB
 }
 
+Task Count-Analyzers {
+    $count = $(ls $rootDir\src\*.cs -Recurse | ? { $_.Name.contains('Analyzer') } | ? { !((cat $_) -match 'abstract class') }).count
+    Write-Host "Found $count C# Analyzers"
+    $count = $(ls $rootDir\src\*.cs -Recurse | ? { $_.Name.contains('CodeFix') } | ? { !((cat $_) -match 'abstract class') }).count
+    Write-Host "Found $count C# Code Fixes"
+    $count = $(ls $rootDir\src\*.cs -Recurse | ? { $_.Name.contains('FixAll') } | ? { !((cat $_) -match 'abstract class') }).count
+    Write-Host "Found $count C# Code Fixes All"
+    $count = $(ls $rootDir\src\*.vb -Recurse | ? { $_.Name.contains('Analyzer') } | ? { !((cat $_) -match 'mustinherit class') }).count
+    Write-Host "Found $count VB Analyzers"
+    $count = $(ls $rootDir\src\*.vb -Recurse | ? { $_.Name.contains('CodeFix') } | ? { !((cat $_) -match 'mustinherit class') }).count
+    Write-Host "Found $count VB Code Fixes"
+    $count = $(ls $rootDir\src\*.vb -Recurse | ? { $_.Name.contains('FixAll') } | ? { !((cat $_) -match 'mustinherit class') }).count
+    Write-Host "Found $count VB Code Fixes All"
+}
+
+Task Update-ChangeLog {
+    # invoke-psake default.ps1 -tasklist update-changelog -parameters @{"token"="<token>"}
+    echo $token
+    return
+    Exec {
+        github_changelog_generator code-cracker/code-cracker --no-pull-requests --no-issues-wo-labels --exclude-labels "Can't repro","update readme",decision,docs,duplicate,question,invalid,wontfix,Duplicate,Question,Invalid,Wontfix  -t $token
+    }
+}
+
 Task Echo { echo echo }
 
 function PackNuget($language, $dir, $nuspecFile, $nupkgFile) {
@@ -185,7 +213,7 @@ function PackNuget($language, $dir, $nuspecFile, $nupkgFile) {
     $nupkgFile = $nupkgFile -f $xml.package.metadata.version
     . $nugetExe pack "$nuspecFile" -OutputDirectory "$dir"
     $nuspecFileName = (ls $nuspecFile).Name
-	Write-Host "  $nuspecFileName ($language/$($xml.package.metadata.version)) -> $nupkgFile"
+    Write-Host "  $nuspecFileName ($language/$($xml.package.metadata.version)) -> $nupkgFile"
     if ($isAppVeyor) {
         Write-Host "Pushing nuget artifact for $language..."
         appveyor PushArtifact $nupkgFile
@@ -205,7 +233,7 @@ function UpdateNuspec($nuspecPath, $language) {
 function RestorePkgs($sln) {
     Write-Host "Restoring $sln..." -ForegroundColor Green
     Retry {
-        . $nugetExe restore "$sln" -MSBuildVersion 14 -NonInteractive -ConfigFile "$rootDir\nuget.config"
+        . $nugetExe restore "$sln" -NonInteractive -ConfigFile "$rootDir\nuget.config"
         if ($LASTEXITCODE) { throw "Nuget restore for $sln failed." }
     }
 }

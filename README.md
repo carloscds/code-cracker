@@ -1,6 +1,6 @@
 # Code Cracker
 
-An analyzer library for C# and VB that uses [Roslyn](https://github.com/dotnet/roslyn) to produce refactorings, code analysis, and other niceties.
+An analyzer library for C# and VB that uses [Roslyn](https://github.com/dotnet/roslyn) to produce refactorings, code analysis, and other niceties. 
 
 Check the official project site on [code-cracker.github.io](http://code-cracker.github.io). There you will find information on how to contribute,
 our task board, definition of done, definition of ready, etc.
@@ -12,8 +12,28 @@ our task board, definition of done, definition of ready, etc.
 [![Coverage Status](https://img.shields.io/coveralls/code-cracker/code-cracker/master.svg)](https://coveralls.io/r/code-cracker/code-cracker?branch=master)
 [![Source Browser](https://img.shields.io/badge/Browse-Source-green.svg)](http://ccref.azurewebsites.net)
 
+You can find this document in the following languages
+
+[![English](https://img.shields.io/badge/language-english-blue.svg)](https://github.com/code-cracker/code-cracker/blob/master/README.md)
+[![Brazilian Portuguese](https://img.shields.io/badge/language-brazilan%20portuguese-brightgreen.svg)](https://github.com/code-cracker/code-cracker/blob/master/README.pt.md)
+
+
 This is a community project, free and open source. Everyone is invited to contribute, fork, share and use the code. No money shall be charged by this
 software, nor it will be. Ever.
+
+## Features
+
+The list of features is documented here: http://code-cracker.github.io/diagnostics.html
+
+#### Design
+Code | Analyzer | Severity | Description 
+-- | -- | -- | --
+[CC0003](http://code-cracker.github.io/diagnostics/CC0003.html) | CatchEmptyAnalyzer | Warning | Catch statements with no Exception as an argument is not recommended. Consider adding an Exception class to the catch statement.
+[CC0004](http://code-cracker.github.io/diagnostics/CC0004.html) | EmptyCatchBlockAnalyzer | Warning | An empty catch block suppress all errors and shouldn’t be used. If the error is expected consider logging it or changing the control flow such that it is explicit.
+[CC0016](http://code-cracker.github.io/diagnostics/CC0016.html) | CopyEventToVariableBeforeFireAnalyzer | Warning | Events should always be checked for null before being invoked. As in a multi-threading context it is possible for an event to be unsuscribed between the moment where it is checked to be non-null and the moment it is raised, the event must be copied to a temporary variable before the check.
+[CC0021](http://code-cracker.github.io/diagnostics/CC0021.html) | NameOfAnalyzer | Warning | In C#6 the nameof() operator should be used to specify the name of a program element instead of a string literal as it produce code that is easier to refactor.
+[CC0024](http://code-cracker.github.io/diagnostics/CC0024.html) | StaticConstructorExceptionAnalyzer | Warning | Static constructor are called before the first time a class is used but the caller doesn’t control when exactly. Exception thrown in this context force callers to use ‘try’ block around any useage of the class and should be avoided.
+[CC0031](http://code-cracker.github.io/diagnostics/CC0031.html) | UseInvokeMethodToFireEventAnalyzer | Warning | In C#6 a delegate can be invoked using the null-propagating operator (?.) and it’s invoke method to avoid throwing a NullReference exception when there is no method attached to the delegate.
 
 ## Installing
 
@@ -40,9 +60,9 @@ Install-Package CodeCracker.VisualBasic
 
 Or use the Package Manager in Visual Studio.
 
-There is also a version for both named `CodeCracker` only, but it makes not sense to get it, you should search for the C# or VB version.
+There is also a version for both named `CodeCracker` only, but it makes no sense to get it, you should search for the C# or VB version.
 
-If you want the alpha builds that build on each push to the repo, add https://www.myget.org/F/codecrackerbuild/ to your nuget feed.
+If you want the alpha builds that build on each push to the repo, add https://www.myget.org/F/codecrackerbuild/ to your Nuget feed.
 We only push complete releases to Nuget.org, and commit builds go to Myget.org.
 
 If you want global analyzers that will work on every project you open in Visual Studio, then you want the Extension.
@@ -59,16 +79,17 @@ msbuild
 
 Then add a reference to CodeCracker.dll from within the Analyzers node inside References, in Visual Studio.
 
+TL;DR:
+If you want to use CodeCracker in all your projects, install the Visual Studio extension ([C#](https://visualstudiogallery.msdn.microsoft.com/ab588981-91a5-478c-8e65-74d0ff450862), [VB](https://visualstudiogallery.msdn.microsoft.com/1a5f9551-e831-4812-abd0-ac48603fc2c1)). If you want to use CodeCracker for just one project, install the Nuget package as described above.
+
 ## SonarQube Plugin
 
-CodeCracker has a SonarQube Plugin that can downloaded at [Plugins HomePage](http://docs.sonarqube.org/display/PLUG/Other+Plugins). 
+CodeCracker has a SonarQube Plugin that can be downloaded at [Plugins HomePage](http://docs.sonarqube.org/display/PLUG/Other+Plugins).
 
-## Contributing
+## Contributing [![Open Source Helpers](https://www.codetriage.com/code-cracker/code-cracker/badges/users.svg)](https://www.codetriage.com/code-cracker/code-cracker)
 
-The main supported IDE for development is Visual Studio 2015.
-If you want to use VS 2015 to contribute to Code Cracker use
-the *.2015.sln files. We recommend migrating to VS 2017 ASAP, as
-we might make VS 2015 obsolete at any time.
+The main supported IDE for development is Visual Studio 2017.
+We do not support VS 2015 anymore.
 
 Questions, comments, bug reports, and pull requests are all welcome.
 Bug reports that include steps-to-reproduce (including code) are
@@ -87,7 +108,7 @@ be assigned to this team.
 
 The easiest way to start is looking into the issues that are
 [up for grabs](https://github.com/code-cracker/code-cracker/labels/up-for-grabs). You
-may ask to work on any of them, read below to see how.
+may ask to work on any of them, read below to see how. You can also triage issues which may include reproducing bug reports, or asking for vital information such as version numbers or reproduction instructions. If you would like to start triaging issues, one easy way to get started is to [subscribe to code-cracker on CodeTriage](https://www.codetriage.com/code-cracker/code-cracker).
 
 If you are just starting with Roslyn, want to contribute, and feel you are not yet ready
 to start working on full analyzers or code fixes, you can start helping with areas that are
@@ -122,8 +143,9 @@ defined ready as:
 
 1. Have most of the scenarios/test cases defined on the issue on Github
 2. If it has an analyzer then
-  1. The warning level of the analyzer must be in the issue's description (`Hidden`, `Information`, `Warning`, or `Error`)
-  2. The diagnostics it provides should already have numeric ids defined formated as `CC0000`.
+
+        1. The warning level of the analyzer must be in the issue's description (`Hidden`, `Information`, `Warning`, or `Error`)
+        2. The diagnostics it provides should already have numeric ids defined formated as `CC0000`.
 3. If it has a code fix then the category should be in the issue's description. The supported categories are listed on the `SupportedCategories.cs` file.
 4. Have some of the maintainers verify it (cannot be the same one who wrote the issue and/or test cases)
 
@@ -154,11 +176,13 @@ The DoD is still evolving. At the present time the checklist is as follows:
 2. Has tests for analyzers, code fixes (including fix all providers) and refactoring
 3. All tests pass
 4. Analyzers follow the guidelines for names
-  1. Always named `<featurename>Analyzer`
-  2. Always add the diagnostic id to the `DiagnosticIds.cs` file.
+
+        1. Always named `<featurename>Analyzer`
+        2. Always add the diagnostic id to the `DiagnosticIds.cs` file.
 5. Code fixes should follow the guidelines for names
-  1. Always named `<featurename>CodeFixProvider`
-  2. Always use the same diagnostic id added to the `DiagnosticIds.cs` file, unless you are writing a code fix for a diagnostic id raised by the C# compiler itself (staring with `CS`).
+
+        1. Always named `<featurename>CodeFixProvider`
+        2. Always use the same diagnostic id added to the `DiagnosticIds.cs` file, unless you are writing a code fix for a diagnostic id raised by the C# compiler itself (staring with `CS`).
 6. Fix all scenarios (fix all in document, fix all in project and fix all in solution) work. You might need to write a `FixAllProvider`. Check the `DisposableVariableNotDisposedFixAllProvider` as an example.
 7. Follow the coding standards present on the project code files.
 8. Works in Visual Studio
@@ -272,7 +296,7 @@ The maintainers have to:
 
 To become part of the core team one has to be invited. Invitations happen only if all the core team agrees.
 
-If a member of the core team is not active for at least to months, they will probably be removed from the core team.
+If a member of the core team is not active for at least two months, they will probably be removed from the core team.
 
 ## Contact
 

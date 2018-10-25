@@ -1,5 +1,6 @@
 ﻿using CodeCracker.CSharp.Style;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -193,8 +194,8 @@ namespace CodeCracker.Test.CSharp.Style
         public async Task TwoEmptyStringsGenerateTwoDiagnostics()
         {
             var test = "var s = string.Empty + string.Empty;".WrapInCSharpMethod();
-            var expected1 = CreateEmptyStringDiagnosticResult(10, 25);
-            var expected2 = CreateEmptyStringDiagnosticResult(10, 40);
+            var expected1 = CreateEmptyStringDiagnosticResult(10, 21);
+            var expected2 = CreateEmptyStringDiagnosticResult(10, 36);
 
             await VerifyCSharpDiagnosticAsync(test, expected1, expected2);
         }
@@ -208,17 +209,9 @@ namespace CodeCracker.Test.CSharp.Style
 
         private static DiagnosticResult CreateEmptyStringDiagnosticResult(int expectedRow, int expectedColumn)
         {
-            var expected = new DiagnosticResult
-            {
-                Id = DiagnosticId.UseEmptyString.ToDiagnosticId(),
-                Message = "Use \"\" instead of 'string.Empty'",
-                Severity = DiagnosticSeverity.Hidden,
-                Locations = new[] { new DiagnosticResultLocation("Test0.cs", expectedRow, expectedColumn) }
-            };
-
-            var t = string.Empty;
-
-            return expected;
+            return new DiagnosticResult(DiagnosticId.UseEmptyString.ToDiagnosticId(), DiagnosticSeverity.Hidden)
+                .WithLocation(expectedRow, expectedColumn)
+                .WithMessage("Use \"\" instead of 'string.Empty'");
         }
     }
 }

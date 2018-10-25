@@ -1,5 +1,6 @@
 ﻿using CodeCracker.CSharp.Style;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -9,15 +10,9 @@ namespace CodeCracker.Test.CSharp.Style
     {
         private static DiagnosticResult CreateUnnecessaryToStringInStringConcatenationDiagnosticResult(int expectedRow, int expectedColumn)
         {
-            var expected = new DiagnosticResult
-            {
-                Id = DiagnosticId.UnnecessaryToStringInStringConcatenation.ToDiagnosticId(),
-                Message = "Unnecessary '.ToString()' call in string concatenation.",
-                Severity = DiagnosticSeverity.Info,
-                Locations = new[] { new DiagnosticResultLocation("Test0.cs", expectedRow, expectedColumn) }
-            };
-
-            return expected;
+            return new DiagnosticResult(DiagnosticId.UnnecessaryToStringInStringConcatenation.ToDiagnosticId(), DiagnosticSeverity.Info)
+                .WithLocation(expectedRow, expectedColumn)
+                .WithMessage("Unnecessary '.ToString()' call in string concatenation.");
         }
 
         [Fact]
@@ -35,7 +30,7 @@ namespace CodeCracker.Test.CSharp.Style
         {
             var source = @"var foo = ""a"" + new System.Text.StringBuilder().ToString();".WrapInCSharpMethod();
 
-            var expected = CreateUnnecessaryToStringInStringConcatenationDiagnosticResult(10, 64);
+            var expected = CreateUnnecessaryToStringInStringConcatenationDiagnosticResult(10, 60);
 
             await VerifyCSharpDiagnosticAsync(source, expected);
         }

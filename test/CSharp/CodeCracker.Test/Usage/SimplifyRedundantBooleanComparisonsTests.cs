@@ -1,5 +1,6 @@
 ﻿using CodeCracker.CSharp.Usage;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -9,35 +10,31 @@ namespace CodeCracker.Test.CSharp.Usage
         : CodeFixVerifier<SimplifyRedundantBooleanComparisonsAnalyzer, SimplifyRedundantBooleanComparisonsCodeFixProvider>
     {
         [Theory]
-        [InlineData("if (foo == true) {}", 21)]
-        [InlineData("if (true == foo) {}", 21)]
-        [InlineData("var fee = (foo == true);", 28)]
-        [InlineData("var fee = (true == foo);", 28)]
-        [InlineData("if (foo == false) {}", 21)]
-        [InlineData("if (false == foo) {}", 21)]
-        [InlineData("var fee = (foo == false);", 28)]
-        [InlineData("var fee = (false == foo);", 28)]
-        [InlineData("if (foo != true) {}", 21)]
-        [InlineData("if (true != foo) {}", 21)]
-        [InlineData("var fee = (foo != true);", 28)]
-        [InlineData("var fee = (true != foo);", 28)]
-        [InlineData("if (foo != false) {}", 21)]
-        [InlineData("if (false != foo) {}", 21)]
-        [InlineData("var fee = (foo != false);", 28)]
-        [InlineData("var fee = (false != true);", 28)]
+        [InlineData("if (foo == true) {}", 17)]
+        [InlineData("if (true == foo) {}", 17)]
+        [InlineData("var fee = (foo == true);", 24)]
+        [InlineData("var fee = (true == foo);", 24)]
+        [InlineData("if (foo == false) {}", 17)]
+        [InlineData("if (false == foo) {}", 17)]
+        [InlineData("var fee = (foo == false);", 24)]
+        [InlineData("var fee = (false == foo);", 24)]
+        [InlineData("if (foo != true) {}", 17)]
+        [InlineData("if (true != foo) {}", 17)]
+        [InlineData("var fee = (foo != true);", 24)]
+        [InlineData("var fee = (true != foo);", 24)]
+        [InlineData("if (foo != false) {}", 17)]
+        [InlineData("if (false != foo) {}", 17)]
+        [InlineData("var fee = (foo != false);", 24)]
+        [InlineData("var fee = (false != true);", 24)]
         public async Task WhenComparingWithBoolAnalyzerCreatesDiagnostic(string sample, int column)
         {
             sample = "bool foo; " + sample; // add declaration of foo
             column += 10;                   // adjust column for added declaration
             var test = sample.WrapInCSharpMethod();
 
-            var expected = new DiagnosticResult
-            {
-                Id = DiagnosticId.SimplifyRedundantBooleanComparisons.ToDiagnosticId(),
-                Message = "You can remove this comparison.",
-                Severity = DiagnosticSeverity.Info,
-                Locations = new[] { new DiagnosticResultLocation("Test0.cs", 10, column) }
-            };
+            var expected = new DiagnosticResult(DiagnosticId.SimplifyRedundantBooleanComparisons.ToDiagnosticId(), DiagnosticSeverity.Info)
+                .WithLocation(10, column)
+                .WithMessage("You can remove this comparison.");
 
             await VerifyCSharpDiagnosticAsync(test, expected);
         }

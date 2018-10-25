@@ -1,5 +1,6 @@
 ﻿using CodeCracker.CSharp.Style;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -26,13 +27,9 @@ namespace CodeCracker.Test.CSharp.Style
                     { }
                 }
             }";
-            var expected = new DiagnosticResult
-            {
-                Id = DiagnosticId.TaskNameAsync.ToDiagnosticId(),
-                Message = string.Format(TaskNameAsyncAnalyzer.MessageFormat, "FooAsync"),
-                Severity = DiagnosticSeverity.Info,
-                Locations = new[] { new DiagnosticResultLocation("Test0.cs", 8, 26) }
-            };
+            var expected = new DiagnosticResult(DiagnosticId.TaskNameAsync.ToDiagnosticId(), DiagnosticSeverity.Info)
+                .WithLocation(8, 26)
+                .WithMessage(string.Format(TaskNameAsyncAnalyzer.MessageFormat, "FooAsync"));
 
             await VerifyCSharpDiagnosticAsync(source, expected);
         }
@@ -100,13 +97,9 @@ namespace CodeCracker.Test.CSharp.Style
             Task Test() {};
         }
     }";
-            var expected = new DiagnosticResult
-            {
-                Id = DiagnosticId.TaskNameAsync.ToDiagnosticId(),
-                Message = string.Format(TaskNameAsyncAnalyzer.MessageFormat, "TestAsync"),
-                Severity = DiagnosticSeverity.Info,
-                Locations = new[] { new DiagnosticResultLocation("Test0.cs", 8, 18) }
-            };
+            var expected = new DiagnosticResult(DiagnosticId.TaskNameAsync.ToDiagnosticId(), DiagnosticSeverity.Info)
+                .WithLocation(8, 18)
+                .WithMessage(string.Format(TaskNameAsyncAnalyzer.MessageFormat, "TestAsync"));
             await VerifyCSharpDiagnosticAsync(source, expected);
         }
 
@@ -226,13 +219,9 @@ public class Bar : IBar
     }
 }";
             //we still get the diagnostic for the interface itself
-            var expected = new DiagnosticResult
-            {
-                Id = DiagnosticId.TaskNameAsync.ToDiagnosticId(),
-                Message = string.Format(TaskNameAsyncAnalyzer.MessageFormat, "FooAsync"),
-                Severity = DiagnosticSeverity.Info,
-                Locations = new[] { new DiagnosticResultLocation("Test0.cs", 5, 10) }
-            };
+            var expected = new DiagnosticResult(DiagnosticId.TaskNameAsync.ToDiagnosticId(), DiagnosticSeverity.Info)
+                .WithLocation(5, 10)
+                .WithMessage(string.Format(TaskNameAsyncAnalyzer.MessageFormat, "FooAsync"));
             await VerifyCSharpDiagnosticAsync(source, expected);
         }
 
@@ -253,14 +242,142 @@ public class Bar : IBar
     }
 }";
             //we still get the diagnostic for the interface itself
-            var expected = new DiagnosticResult
-            {
-                Id = DiagnosticId.TaskNameAsync.ToDiagnosticId(),
-                Message = string.Format(TaskNameAsyncAnalyzer.MessageFormat, "FooAsync"),
-                Severity = DiagnosticSeverity.Info,
-                Locations = new[] { new DiagnosticResultLocation("Test0.cs", 5, 10) }
-            };
+            var expected = new DiagnosticResult(DiagnosticId.TaskNameAsync.ToDiagnosticId(), DiagnosticSeverity.Info)
+                .WithLocation(5, 10)
+                .WithMessage(string.Format(TaskNameAsyncAnalyzer.MessageFormat, "FooAsync"));
             await VerifyCSharpDiagnosticAsync(source, expected);
+        }
+
+        [Fact]
+        public async Task ChangeTaskNameWithAsyncNotAtTheEndWithUpperCaseLetter()
+        {
+            const string source = @"
+    using System.Threading.Tasks;
+
+    namespace ConsoleApplication1
+    {
+        public class Foo
+        {
+            public methodTest()
+            {
+                await TestAsyncFoo();
+            }
+
+            public Task<bool> TestAsyncFoo()
+            {
+                return true;
+            }
+        }
+
+    }";
+            const string fixtest = @"
+    using System.Threading.Tasks;
+
+    namespace ConsoleApplication1
+    {
+        public class Foo
+        {
+            public methodTest()
+            {
+                await TestFooAsync();
+            }
+
+            public Task<bool> TestFooAsync()
+            {
+                return true;
+            }
+        }
+
+    }";
+            await VerifyCSharpFixAsync(source, fixtest);
+        }
+
+        [Fact]
+        public async Task ChangeTaskNameWithAsyncNotAtTheEndWithUnderline()
+        {
+            const string source = @"
+    using System.Threading.Tasks;
+
+    namespace ConsoleApplication1
+    {
+        public class Foo
+        {
+            public methodTest()
+            {
+                await TestAsync_Foo();
+            }
+
+            public Task<bool> TestAsync_Foo()
+            {
+                return true;
+            }
+        }
+
+    }";
+            const string fixtest = @"
+    using System.Threading.Tasks;
+
+    namespace ConsoleApplication1
+    {
+        public class Foo
+        {
+            public methodTest()
+            {
+                await Test_FooAsync();
+            }
+
+            public Task<bool> Test_FooAsync()
+            {
+                return true;
+            }
+        }
+
+    }";
+            await VerifyCSharpFixAsync(source, fixtest);
+        }
+
+        [Fact]
+        public async Task ChangeTaskNameWithAsyncNotAtTheEndWithDigit()
+        {
+            const string source = @"
+    using System.Threading.Tasks;
+
+    namespace ConsoleApplication1
+    {
+        public class Foo
+        {
+            public methodTest()
+            {
+                await TestAsync0Foo();
+            }
+
+            public Task<bool> TestAsync0Foo()
+            {
+                return true;
+            }
+        }
+
+    }";
+            const string fixtest = @"
+    using System.Threading.Tasks;
+
+    namespace ConsoleApplication1
+    {
+        public class Foo
+        {
+            public methodTest()
+            {
+                await Test0FooAsync();
+            }
+
+            public Task<bool> Test0FooAsync()
+            {
+                return true;
+            }
+        }
+
+    }";
+            await VerifyCSharpFixAsync(source, fixtest);
         }
     }
 }
